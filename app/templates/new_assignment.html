@@ -5,7 +5,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
 
 <div class="dashboard-content">
-  <form id="assignment" class="needs-validation" action="{{ url_for('assignments.new_assignment', course_id=course.id) }}" method="POST" novalidate>
+  <form id="assignment" class="needs-validation" action="{{ url_for('assignments.new_assignment', course_id=course.id) }}" method="POST" enctype="multipart/form-data" novalidate>
     {{ assignmentform.hidden_tag() }}
     <!-- Assignment -->
     <div class="form-group d-flex flex-column align-items-center">
@@ -98,6 +98,11 @@
     <div class="d-flex justify-content-center my-4">
       <button class="btn btn-green" type="submit">Create</button>
     </div>
+<!-- Optional PDF Upload -->
+<div class="col-10 mb-3">
+  <label for="pdf_file" class="form-label">Upload PDF (Optional)</label>
+  <input type="file" name="pdf_file" id="pdf_file" class="form-control" accept=".pdf">
+</div>
 
   </form>
 </div>

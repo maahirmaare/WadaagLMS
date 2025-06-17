@@ -10,7 +10,7 @@ def send_email(subject, sender, recipients, text_body, html_body):
 
 def send_email_confirmation(user):
     token = user.get_token(expires_in=60)
-    send_email(subject="EDUCA - Email Confirmation",
+    send_email(subject="WadaagLMS - Email Confirmation",
                 sender="other@javierperez.dev",
                 recipients=[user.email],
                text_body=render_template('email/verify_email.txt',
@@ -20,7 +20,7 @@ def send_email_confirmation(user):
 
 def send_password_reset(user):
     token = user.get_token(expires_in=600)
-    send_email(subject="EDUCA - Password Reset",
+    send_email(subject="WadaagLMS - Password Reset",
                 sender="other@javierperez.dev",
                 recipients=[user.email],
                text_body=render_template('email/reset_password.txt',

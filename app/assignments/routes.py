@@ -1,18 +1,15 @@
-from flask import (Blueprint, render_template, request,
-                    redirect, url_for, flash)
-from app import db
-from flask_login import current_user, login_required
-from app.models import (Course, Assignment, User_Assignment,
-                        Question, Course_User, Option)
-from app.assignments.forms import AssignmentForm
-from app.assignments.utils import (assignment_error_handler, new_assignment_error_handler,
-                                    save_assignment, delete_assignment)
-from app.students.utils import calculate_grade
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
 from datetime import datetime
-from app.filters import autoversion
-from app.middleware import course_auth, teacher_auth
 from time import time
 import json
+
+from app import db
+from app.models import Course, Assignment, User_Assignment, Question, Course_User, Option
+from app.assignments.forms import AssignmentForm
+from app.assignments.utils import assignment_error_handler, new_assignment_error_handler, save_assignment, delete_assignment
+from app.students.utils import calculate_grade
+from app.middleware import course_auth, teacher_auth
 
 assignments_ = Blueprint("assignments", __name__)
 
@@ -20,297 +17,176 @@ assignments_ = Blueprint("assignments", __name__)
 @login_required
 @course_auth
 def assignments(course_id):
-    profile_image = url_for('static', filename="profile_images/" + current_user.profile_image)
-    course = Course.query.filter_by(id=course_id).first()
-    assignments = Assignment.query.filter_by(course_id=course_id).all()
-    assignments = sorted(assignments, key=lambda a: a.duedate_time)
+    profile_image = url_for('static', filename=f"profile_images/{current_user.profile_image}")
+    course = Course.query.get_or_404(course_id)
+    assignments = sorted(Assignment.query.filter_by(course_id=course_id).all(), key=lambda a: a.duedate_time)
+
     user_assignments = []
-
     for a in assignments:
-        user_assignment = User_Assignment.query.filter_by(user_id=current_user.id, assignment_id=a.id).all()
-        if user_assignment:
-            user_assignment.sort(key=lambda a:a.created_time)
-            user_assignments.append(user_assignment[-1])
-        else:
-            user_assignments.append(0)
+        ua = User_Assignment.query.filter_by(user_id=current_user.id, assignment_id=a.id).all()
+        user_assignments.append(sorted(ua, key=lambda x: x.created_time)[-1] if ua else 0)
 
-    if request.method == "GET":
-        return render_template('assignments.html',
-                                profile_image=profile_image,
-                                course=course,
-                                assignments=assignments,
-                                user_assignments=user_assignments,
-                                current_time=time(),
-                                title=str(course.title) + " - Assignments")
+    return render_template('assignments.html',
+                           profile_image=profile_image,
+                           course=course,
+                           assignments=assignments,
+                           user_assignments=user_assignments,
+                           current_time=time(),
+                           title=f"{course.title} - Assignments")
 
-@assignments_.route('/dashboard/courses/<int:course_id>/assignments/new', methods=["GET", "POST"])
+@assignments_.route('/dashboard/courses/<int:course_id>/assignments/new', methods=['GET', 'POST'])
 @login_required
 @course_auth
 @teacher_auth
 def new_assignment(course_id):
-    profile_image = url_for('static', filename="profile_images/" + current_user.profile_image)
-    assignments = Assignment.query.filter_by(course_id=course_id).all()
-    course = Course.query.filter_by(id=course_id).first()
-    assignmentform = AssignmentForm()
-    errors = {}
+    profile_image = url_for('static', filename=f"profile_images/{current_user.profile_image}")
+    course = Course.query.get_or_404(course_id)
+    assignments = sorted(Assignment.query.filter_by(course_id=course_id).all(), key=lambda a: a.id)
+    form = AssignmentForm()
 
-    assignments.sort(key=lambda c:c.id)
+    if request.method == 'POST':
+        form_data = request.form.to_dict()
+        if "ajax" in form_data:
+            return new_assignment_error_handler(form, form_data)
 
-    request_form = request.form.to_dict()
+        if len(assignments) >= 20:
+            flash("Max number of assignments allowed is 20", "danger")
+            return redirect(url_for("assignments.assignments", course_id=course.id))
 
-    if "ajax" in request_form and request.method == "POST":
-        return new_assignment_error_handler(assignmentform, request_form)
-    if request.method == "POST" and len(assignments) < 20:
-        print(request_form)
-        errors = new_assignment_error_handler(assignmentform, request_form)
+        errors = new_assignment_error_handler(form, form_data)
         if errors:
             flash("There was an error in creating that assignment.", "danger")
-            return redirect(url_for('assignments.new_assignment', course_id=course.id))
+            return redirect(url_for("assignments.new_assignment", course_id=course.id))
 
-        questions = {}
-        options = {}
-        q_ids = []
-        question_option_ids = []
-        question_amt = 0
-
-        # separate the questions from the options
-        for key, value in request_form.items():
+        questions, options, q_ids = {}, {}, []
+        for key, value in form_data.items():
             if "question_option" in key:
                 options[key] = value
             elif "question_" in key:
                 questions[key] = value
 
-        # Split the POST question variables to just be question ids
-        for key, value in questions.items():
-            question_ids = key.split("_")
-            question_id = question_ids[2]
-            if question_id not in q_ids:
-                q_ids.append(question_id)
+        for key in questions:
+            q_id = key.split("_")[2]
+            if q_id not in q_ids:
+                q_ids.append(q_id)
 
-        # Split the POST option variables to just be question ids with option ids
-        for key, value in options.items():
-            qu_op_ids = key.split("_")
-            q_id = qu_op_ids[2]
-            o_id = qu_op_ids[3]
-
-            question_option_ids.append((q_id, o_id))
-
+        question_option_ids = [(k.split("_")[2], k.split("_")[3]) for k in options]
         q_ids.sort()
-        question_amt = len(q_ids)
 
-        date_input = assignmentform.date_input.data.strftime('%Y-%m-%d').split("-")
-        hour = int(assignmentform.hour.data)
-        minute = int(assignmentform.minute.data)
-        month = int(date_input[1])
-        day = int(date_input[2])
-        year = int(date_input[0])
-
-        datetime_object = datetime(year, month, day, hour, minute)
-
-        duedate_time = datetime.timestamp(datetime_object)
+        dt = datetime.strptime(form.date_input.data.strftime('%Y-%m-%d'), '%Y-%m-%d')
+        duedate_time = datetime(dt.year, dt.month, dt.day, int(form.hour.data), int(form.minute.data)).timestamp()
         duedate_ctime = datetime.fromtimestamp(duedate_time).isoformat() + "Z"
 
-        assignment = Assignment(course_id=course.id,
-                                points=assignmentform.points.data,
-                                title=assignmentform.title.data,
-                                content=assignmentform.content.data,
-                                type=assignmentform.type.data,
-                                tries=assignmentform.tries.data,
-                                duedate_time=duedate_time,
-                                duedate_ctime=duedate_ctime)
+        assignment = Assignment(course_id=course.id, title=form.title.data, content=form.content.data,
+                                type=form.type.data, tries=form.tries.data, points=form.points.data,
+                                duedate_time=duedate_time, duedate_ctime=duedate_ctime)
         db.session.add(assignment)
         db.session.commit()
 
-        # CREATE each question for the assignment
-        for x in range(question_amt):
+        for i, q_id in enumerate(q_ids):
             question = Question(assignment_id=assignment.id,
-                                title=questions['question_title_' + str(x)],
-                                content=questions['question_content_' + str(x)],
-                                answer=questions['question_answer_' + str(x)],
-                                points=questions['question_points_' + str(x)],
-                                type=questions['question_type_' + str(x)])
-
+                                title=questions.get(f"question_title_{q_id}"),
+                                content=questions.get(f"question_content_{q_id}"),
+                                answer=questions.get(f"question_answer_{q_id}"),
+                                points=questions.get(f"question_points_{q_id}"),
+                                type=questions.get(f"question_type_{q_id}"))
             db.session.add(question)
             db.session.commit()
 
-            # CREATE each option for that question
-            for key, value in question_option_ids:
-                if key == str(x):
+            for qk, ok in question_option_ids:
+                if qk == q_id:
                     option = Option(question_id=question.id,
-                                    content=options["question_option_" + key + "_" + value])
+                                    content=options.get(f"question_option_{qk}_{ok}"))
                     db.session.add(option)
                     db.session.commit()
 
         flash("Assignment was created successfully!", "success")
         return redirect(url_for("assignments.assignments", course_id=course.id))
 
-    elif request.method == "POST" and len(assignments) >= 20:
-        flash("Max number of assignments allowed is 20", "danger")
-        return redirect(url_for("assignments.assignments", course_id=course.id))
-    elif request.method == "GET":
-        return render_template('new_assignment.html',
-                                profile_image=profile_image,
-                                course=course,
-                                assignmentform=assignmentform,
-                                title=str(course.title) + " - New Assignment")
+    return render_template('new_assignment.html', profile_image=profile_image, course=course,
+                           assignmentform=form, title=f"{course.title} - New Assignment")
 
-# NO CSRF
 @assignments_.route('/dashboard/courses/<int:course_id>/assignments/<int:assignment_id>', methods=['GET', 'POST'])
 @login_required
 @course_auth
 def assignment(course_id, assignment_id):
-    profile_image = url_for('static', filename="profile_images/" + current_user.profile_image)
+    profile_image = url_for('static', filename=f"profile_images/{current_user.profile_image}")
     file = request.files.get("file")
-    upload = request.form.get("upload")
+    form_data = request.form.to_dict()
 
-    redo = request.args.get("redo")
-    delete = request.form.get("delete")
-    request_form = request.form.to_dict()
+    course = Course.query.get_or_404(course_id)
+    assignment = Assignment.query.get_or_404(assignment_id)
+    user_assignments = sorted(User_Assignment.query.filter_by(user_id=current_user.id, assignment_id=assignment.id).all(), key=lambda a: a.created_time)
+    questions = sorted(Question.query.filter_by(assignment_id=assignment.id).all(), key=lambda q: q.id)
+    options_dict = {str(q.id): q.options for q in questions}
+    user_assignment = user_assignments[-1] if user_assignments else ''
+    tries = user_assignment.tries if user_assignment else 0
 
-    course = Course.query.filter_by(id=course_id).first()
-    assignment = Assignment.query.filter_by(id=assignment_id).first()
-    user_assignments = User_Assignment.query.filter_by(user_id=current_user.id, assignment_id=assignment.id).all()
-    questions = Question.query.filter_by(assignment_id=assignment.id).all()
-    options_dict = {}
+    if request.method == 'POST':
+        if "ajax" in form_data:
+            return assignment_error_handler(form_data)
 
-    questions.sort(key=lambda q:q.id)
-    user_assignments.sort(key=lambda a:a.points)
-    tries = len(user_assignments)
-
-    if user_assignments:
-        user_assignment = user_assignments[-1]
-        tries = user_assignment.tries
-    else:
-        user_assignment = ''
-
-    # get all options for each question
-    for question in questions:
-        options = question.options
-        options_dict[str(question.id)] = options
-
-    if request.method == "POST" and upload and assignment.type == "Instructions":
-        if tries < assignment.tries:
-            course_user = Course_User.query.filter_by(user_id=current_user.id, course_id=course.id).first()
-            filename = save_assignment(file)
-
-            if filename:
-                calculate_grade(course_user, assignment, 0)
-                for ua in user_assignments:
-                    delete_assignment(ua.filename)
-                    db.session.delete(ua)
-
-                user_assignment = User_Assignment(user_id=current_user.id,
-                                                assignment_id=assignment.id,
-                                                filename=filename,
-                                                tries=tries+1,
-                                                points=0,
-                                                type=assignment.type)
-
-                db.session.add(user_assignment)
-                db.session.commit()
-                flash("Assignment has been successfully submitted.", "success")
-                return redirect(url_for('assignments.assignment', course_id=course.id, assignment_id=assignment.id))
+        if request.form.get("upload") and assignment.type == "Instructions":
+            if tries < assignment.tries:
+                course_user = Course_User.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+                filename = save_assignment(file)
+                if filename:
+                    for ua in user_assignments:
+                        delete_assignment(ua.filename)
+                        db.session.delete(ua)
+                    user_assignment = User_Assignment(user_id=current_user.id, assignment_id=assignment.id,
+                                                     filename=filename, tries=tries+1, points=0,
+                                                     type=assignment.type)
+                    db.session.add(user_assignment)
+                    db.session.commit()
+                    calculate_grade(course_user, assignment, 0)
+                    flash("Assignment has been successfully submitted.", "success")
+                else:
+                    flash("That file type is not allowed or file uploading has been disabled.", "warning")
             else:
-                flash("That file type is not allowed or file uploading has been disabled.", "warning")
-                return redirect(url_for('assignments.assignment', course_id=course.id, assignment_id=assignment.id))
-        else:
-            flash("You have already reached your max tries.", "warning")
-            return redirect(url_for('assignments.assignments', course_id=course.id))
-
-
-        return redirect(url_for("assignments.assignment", course_id=course.id, assignment_id=assignment.id))
-    elif current_user.id == course.teacher_id and request.method == "POST" and delete:
-        course_assignments = Assignment.query.filter_by(course_id=course.id).all()
-        course_users = Course_User.query.filter_by(course_id=course.id).all()
-        total_assignment_points = 0
-
-        # get the total point count for assignments in course
-        for course_assignment in course_assignments:
-            total_assignment_points += course_assignment.points
-
-        # for every user in the course delete assignments that
-        # they turned in for this assignment & reflect the change
-        # to their grade
-        for course_user in course_users:
-            turned_in_assignments = User_Assignment.query.filter_by(user_id=course_user.user_id, assignment_id=assignment.id).all()
-
-            if turned_in_assignments:
-                turned_in_assignments.sort(key=lambda a:a.created_time)
-                student_assignment = turned_in_assignments[-1]
-
-                assignments_done = json.loads(course_user.assignments_done)
-                del assignments_done[str(assignment.id)]
-                course_user.assignments_done = json.dumps(assignments_done)
-
-                course_user.points -= student_assignment.points
-
-                try:
-                    leftover_points = course_user.points/(total_assignment_points - assignment.points)
-                except ZeroDivisionError:
-                    leftover_points = 0
-
-                course_user.grade = '{:.2%}'.format(leftover_points)
-
-        # deletion of assignments cascades to questions, options and user_assignments
-        db.session.delete(assignment)
-        db.session.commit()
-
-        flash('Assignment was deleted successfully!', 'success')
-        return redirect(url_for("assignments.assignments", course_id=course.id))
-    if "ajax" in request_form and request.method == "POST":
-        return assignment_error_handler(request_form)
-    elif request.method == "POST" and current_user.profession == "Student" and tries < assignment.tries:
-
-        errors = assignment_error_handler(request_form)
-        if errors:
-            flash("There was an error in submitting this assignment.", "danger")
+                flash("You have already reached your max tries.", "warning")
             return redirect(url_for('assignments.assignment', course_id=course.id, assignment_id=assignment.id))
 
-        course_user = Course_User.query.filter_by(user_id=current_user.id, course_id=course.id).first()
-        total_assignment_points = 0
-        answers = []
-        points = 0
+        if request.form.get("delete") and current_user.id == course.teacher_id:
+            course_users = Course_User.query.filter_by(course_id=course.id).all()
+            for user in course_users:
+                ua = User_Assignment.query.filter_by(user_id=user.user_id, assignment_id=assignment.id).all()
+                if ua:
+                    ua_sorted = sorted(ua, key=lambda a: a.created_time)
+                    last_ua = ua_sorted[-1]
+                    ad = json.loads(user.assignments_done)
+                    ad.pop(str(assignment.id), None)
+                    user.assignments_done = json.dumps(ad)
+                    user.points -= last_ua.points
+                    total_points = sum(a.points for a in Assignment.query.filter_by(course_id=course.id).all() if a.id != assignment.id)
+                    user.grade = '{:.2%}'.format(user.points / total_points if total_points else 0)
+            db.session.delete(assignment)
+            db.session.commit()
+            flash("Assignment was deleted successfully!", "success")
+            return redirect(url_for("assignments.assignments", course_id=course.id))
 
-        for key, value in request_form.items():
-            if "question_" in key:
-                answers.append(value)
+        if current_user.profession == "Student" and tries < assignment.tries:
+            errors = assignment_error_handler(form_data)
+            if errors:
+                flash("There was an error in submitting this assignment.", "danger")
+                return redirect(url_for("assignments.assignment", course_id=course.id, assignment_id=assignment.id))
 
-        for i in range(len(answers)):
-            if questions[i].answer == answers[i]:
-                points += questions[i].points
+            course_user = Course_User.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+            answers = [v for k, v in form_data.items() if "question_" in k]
+            points = sum(q.points for i, q in enumerate(questions) if q.answer == answers[i])
+            calculate_grade(course_user, assignment, points)
 
-        if assignment.points == points:
-            tries = assignment.tries
-        else:
-            tries += 1
+            user_assignment = User_Assignment(user_id=current_user.id, assignment_id=assignment.id, filename="",
+                                             answers=answers, points=points, tries=tries + 1, type=assignment.type)
+            db.session.add(user_assignment)
+            db.session.commit()
+            flash("Assignment turned in!", "success")
+            return redirect(url_for("assignments.assignment", course_id=course.id, assignment_id=assignment.id))
 
-        calculate_grade(course_user, assignment, points)
-
-        user_assignment = User_Assignment(user_id=current_user.id,
-                                        assignment_id=assignment.id,
-                                        filename="",
-                                        answers=answers,
-                                        points=points,
-                                        tries=tries,
-                                        type=assignment.type)
-
-        db.session.add(user_assignment)
-        db.session.commit()
-
-        flash("Assignment turned in!", "success")
-        return redirect(url_for("assignments.assignment", course_id=course.id, assignment_id=assignment.id))
-    elif request.method == "POST":
         flash("You can no longer redo this assignment.", "danger")
         return redirect(url_for("assignments.assignment", course_id=course.id, assignment_id=assignment.id))
-    elif request.method == "GET":
-        return render_template('assignment.html',
-                                profile_image=profile_image,
-                                course=course,
-                                assignment=assignment,
-                                current_time=time(),
-                                user_assignment=user_assignment,
-                                questions=questions,
-                                options_dict=options_dict,
-                                redo=redo,
-                                tries=tries,
-                                title=course.title + " - " + assignment.title)
+
+    return render_template('assignment.html', profile_image=profile_image, course=course, assignment=assignment,
+                           current_time=time(), user_assignment=user_assignment, questions=questions,
+                           options_dict=options_dict, redo=request.args.get("redo"), tries=tries,
+                           title=f"{course.title} - {assignment.title}")

@@ -4,6 +4,9 @@
   <form class="needs-validation" method="POST" novalidate>
     <!-- CSRF token protects against input attacks -->
     {{ form.hidden_tag() }}
+    <div class="text-center mb-3">
+  <h4>Welcome to <strong>WadaagLMS</strong> – Empowering Somali Teachers 📚🇸🇴</h4>
+</div>
     <div class="row justify-content-center mb-3 mt-7">
       <h1 class="display-5">Login</h1>
     </div>
@@ -57,3 +60,4 @@
     <small class="text-muted mb-5">Don't Have An Account? <a href="{{ url_for('users.register') }}">Register</a></small>
   </div>
 {% endblock content %}
+

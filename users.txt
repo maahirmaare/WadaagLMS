@@ -1,7 +1,10 @@
-Clyde Freedman, clydefreeman@educa.com,"Teacher"
-Irma Morales, irmamorales@educa.com, "Student"
-Kevin Estrada, kevinestrada@educa.com,"Student"
-Juan Chavez, juanchavez@educa.com,"Student"
-Louis Abbott, louisabbott@educa.com,"Student"
+Clyde Freedman, clydefreeman@WadaagLMS.com,"Teacher"
+Irma Morales, irmamorales@WadaagLMS.com, "Student"
+Kevin Estrada, kevinestrada@WadaagLMS.com,"Student"
+Juan Chavez, juanchavez@WadaagLMS.com,"Student"
+Louis Abbott, louisabbott@WadaagLMS.com,"Student"
 
 Password: 12345678
+
+teacher@example.com / teacher123
+student@example.com / student123

@@ -198,12 +198,13 @@ class Option(db.Model):
 class Lecture(db.Model):
     __tablename__ = 'lecture'
     id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete='CASCADE'))
-    title = db.Column(db.String(120), nullable=False)
-    url = db.Column(db.Text, nullable=False)
+    title = db.Column(db.String(255))
+    url = db.Column(db.String(255))
     description = db.Column(db.Text)
-    created_time = db.Column(db.Float, nullable=False, default=time)
-    created_ctime = db.Column(db.DateTime, nullable=False, default=time_readable)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
+    created_time = db.Column(db.DateTime)
+    created_ctime = db.Column(db.DateTime)
+    file = db.Column(db.String(255))  # <-- Make sure this exists
 
     def __repr__(self):
         return f"Lecture('{self.id}', '{self.course_id}', '{self.title}', '{self.description}', '{self.url}')"

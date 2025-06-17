@@ -24,10 +24,11 @@ def register():
                     email=form.email.data,
                     profession=form.profession.data,
                     password=hashed_pw,
-                    confirmed=False)
+                    confirmed=True)  # Changed to True to skip email confirmation
         db.session.add(user)
         db.session.commit()
-        return redirect(url_for('users.verify_email_message', email=form.email.data))
+        flash("Registration successful! You can now log in.", "success")
+        return redirect(url_for('users.login'))  # Redirect to login instead
     else:
         return render_template("register.html", title="Register",
                                 form=form)

@@ -4,7 +4,7 @@ html, body {
 
 
 a {
-  color: #3F88C5;
+  color:#0288D1;
   text-decoration: none;
 }
 
@@ -93,9 +93,9 @@ a {
 .token-card {
   margin-top: 7rem;
   padding: 3rem;
-  color: #022B43;
+  color: #263238;
   background-color: #ffffff;
-  border: 2px solid #FEBA2C;
+  border: 2px solid #FDD835;
   border-radius: .5rem;
 }
 
@@ -104,15 +104,15 @@ a {
 }
 
 .blue-text {
-  color: #3F88C5;
+  color:#0288D1;
 }
 
 .green-text {
-  color: #136F63;
+  color: #FF5722;
 }
 
 .yellow-text {
-  color: #FEBA2C;
+  color: #FDD835;
 }
 
 .drop-btn {
@@ -129,11 +129,11 @@ a {
 }
 
 .border-bottom-green {
-  border-bottom: 1px solid #136F63;
+  border-bottom: 1px solid #FF5722;
 }
 
 .border-top-navy {
-  border-top: 2px solid #022B43;
+  border-top: 2px solid #263238;
 }
 
 .border-top-red {
@@ -145,12 +145,12 @@ a {
 }
 
 .border-bottom-yellow {
-  border-bottom: 2px solid #FEBA2C;
+  border-bottom: 2px solid #FDD835;
 }
 
 .btn-blue {
   color: #fff;
-  background-color: #3F88C5;
+  background-color:#0288D1;
 }
 
 .btn-blue:hover {
@@ -170,7 +170,7 @@ a {
 
 .btn-yellow {
   color: #fff;
-  background-color: #FEBA2C;
+  background-color: #FDD835;
 }
 
 .btn-yellow:hover {
@@ -180,7 +180,7 @@ a {
 
 .btn-green {
   color: #fff;
-  background-color: #136F63;
+  background-color: #FF5722;
 }
 
 .btn-green:hover {
@@ -190,7 +190,7 @@ a {
 
 .bg-blue {
   color: #ffffff;
-  background-color: #3F88C5;
+  background-color:#0288D1;
 }
 
 .bg-red {
@@ -200,17 +200,17 @@ a {
 
 .bg-yellow {
   color: #ffffff;
-  background-color: #FEBA2C;
+  background-color: #FDD835;
 }
 
 .bg-green {
   color: #ffffff;
-  background-color: #136F63;
+  background-color: #FF5722;
 }
 
 .bg-navy {
   color: #ffffff;
- background-color: #022B43;
+ background-color: #263238;
 }
 
 .bg-navy a {
@@ -350,7 +350,7 @@ a {
 /* -COURSES-ADD/NEW-BUTTON */
 
 .add-course-btn {
-  color: #3F88C5;
+  color:#0288D1;
   border: none;
   background: none;
   outline: none !important;
@@ -382,7 +382,7 @@ a {
   flex-direction: column;
   min-width: 0;
   word-wrap: break-word;
-  background-color: #022B43;
+  background-color: #263238;
   background-clip: border-box;
   border-radius: .5rem;
   top: 0px;
@@ -430,7 +430,7 @@ a {
   align-items: center;
   margin: 2.15rem 1rem 0 1rem;
   padding-bottom: .6rem;
-  border-bottom: 2px solid #136F63;
+  border-bottom: 2px solid #FF5722;
 }
 
 .dashboard-content {
@@ -471,7 +471,7 @@ a {
     z-index: 1;
     position: fixed;
     display: block;
-    background-color: #022B43 !important;
+    background-color: #263238 !important;
     border-right: 2px solid #D00814;
     overflow-x: hidden;
   }
@@ -493,7 +493,7 @@ a {
   color: #ffffff;
   font-weight: 700;
   background-color: #3B7DB4;
-  border: 3px solid #022B43;
+  border: 3px solid #263238;
   border-radius: 50%;
   overflow: hidden;
 }
@@ -701,8 +701,8 @@ a {
   display: flex;
   justify-content: center;
   align-items: center;
-  border-top: 2px solid #136F63;
-  border-bottom: 1px solid #136F63;
+  border-top: 2px solid #FF5722;
+  border-bottom: 1px solid #FF5722;
 }
 
 .student-info:hover {
@@ -723,7 +723,7 @@ a {
 
 .table-e {
   width: 100%;
-  color: #022B43;
+  color: #263238;
 }
 
 .table-e th {
@@ -734,7 +734,7 @@ a {
 .table-e td {
   padding: .75rem;
   vertical-align: top;
-  border-top: 1px solid #136F63;
+  border-top: 1px solid #FF5722;
 }
 
 .table-e thead th {
@@ -822,7 +822,7 @@ a {
 .inbox-convos-content:hover {
   text-decoration: none;
   background-color: #dee2e6;
-  box-shadow: inset -5px 0 0 0 #022B43;
+  box-shadow: inset -5px 0 0 0 #263238;
 }
 
 .inbox-snip-header {
@@ -970,7 +970,7 @@ a {
 }
 
 .loader {
-  color: #3F88C5;
+  color:#0288D1;
   font-size: .25rem;
   transform: translateZ(0);
   animation-delay: -0.16s;
@@ -1074,4 +1074,50 @@ a {
 .left-msg {
   font-style: italic;
   margin: 1.5rem;
+}
+
+/* ====== WADAAGLMS CUSTOM SOMALI THEME ====== */
+body {
+  background-color: #f4f9fc; /* very light blue background */
+  color: #0288D1; /* text default color */
+}
+
+.navbar, .sidenav {
+  background-color: #0288D1 !important; /* dark navy background */
+  border-right: 3px solid #4EA9DE;
+}
+
+.sidenav a:hover {
+  color: #F4B400 !important; /* yellow highlight */
+}
+
+.card-course {
+  background-color: #4EA9DE;
+  color: white;
+  border: none;
+}
+
+.card-course-header {
+  background-color: #0288D1;
+  color: white;
+}
+
+.btn-blue {
+  background-color:#0288D1;
+  border: none;
+}
+.btn-blue:hover {
+  background-color: #3b92c5;
+}
+
+.dashboard-header {
+  border-bottom: 3px solid #4EA9DE;
+}
+
+.course-nav a {
+  color: #0288D1;
+}
+.course-nav a:hover {
+  color: #F4B400;
+  font-weight: bold;
 }

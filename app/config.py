@@ -8,7 +8,7 @@ class Config:
     # SECRET_KEY = config['DEFAULT']['SECRET_KEY']
     # SQLALCHEMY_DATABASE_URI = config['DEFAULT']['DATABASE_URI']
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAX_CONTENT_LENGTH = 500 * 1024
     MAIL_SERVER = 'mail.privateemail.com'

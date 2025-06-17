@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+load_dotenv()  # 🔥 This will load .env before anything else
+
+from flask_migrate import Migrate
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_limiter import Limiter
@@ -15,6 +19,7 @@ app = Flask(__name__)
 limiter = Limiter(key_func=get_remote_address,
                 default_limits=['1000 per day', '200 per hour'])
 db = SQLAlchemy()
+migrate = Migrate()
 bcrypt = Bcrypt()
 moment = Moment()
 
@@ -34,6 +39,7 @@ def create_app(config_class=Config):
     limiter.init_app(app)
     app.app_context().push()
     db.init_app(app)
+    migrate.init_app(app, db)
     bcrypt.init_app(app)
     moment.init_app(app)
     login_manager.init_app(app)

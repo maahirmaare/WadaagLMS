@@ -43,6 +43,13 @@
                 <p>
                     {{ lecture.description| safe }}
                 </p>
+                {% if lecture.file %}
+<div class="text-center mt-3 mb-4">
+    <a class="btn btn-success" href="{{ url_for('static', filename='lectures/' + lecture.file) }}" download>
+        📥 Download Lecture File
+    </a>
+</div>
+{% endif %}
             </div>
         </div>
         {% if current_user.id == course.teacher_id %}

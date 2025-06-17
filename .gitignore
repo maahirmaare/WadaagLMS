@@ -1,18 +1,29 @@
-enveduca
-.vscode
+# 🐍 Python
 __pycache__/
-.DS_Store
-*.pyc
+*.py[cod]
+*.egg-info/
+
+# 🚫 Virtual environments
+venv/
+env/
+WADAAGLMS/
+
+# 🔐 Environment & config
+.env
+.flaskenv
 instance/
-.pytest_cache/
-.coverage
-htmlcov/
+pyvenv.cfg
+
+# ⚙️ Build files
 dist/
 build/
-*.egg-info/
-*.ini
-.flaskenv
-pyvenv.cfg
-bin/
-lib/
-README.md
+htmlcov/
+.coverage
+
+# 🧠 IDE and system files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 👍 Keep your documentation
+!README.md
