@@ -6,6 +6,7 @@ __pycache__/
 # 🚫 Virtual environments
 venv/
 env/
+educa_env/
 WADAAGLMS/
 
 # 🔐 Environment & config
@@ -14,16 +15,22 @@ WADAAGLMS/
 instance/
 pyvenv.cfg
 
-# ⚙️ Build files
+# ⚙️ Build and coverage
 dist/
 build/
 htmlcov/
 .coverage
+*.log
 
 # 🧠 IDE and system files
 .vscode/
+.idea/
 .DS_Store
 Thumbs.db
+
+# 🗃️ Database or migration
+migrations/
+*.sqlite3
 
 # 👍 Keep your documentation
 !README.md

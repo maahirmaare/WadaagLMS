@@ -1,10 +1,2 @@
-Clyde Freedman, clydefreeman@WadaagLMS.com,"Teacher"
-Irma Morales, irmamorales@WadaagLMS.com, "Student"
-Kevin Estrada, kevinestrada@WadaagLMS.com,"Student"
-Juan Chavez, juanchavez@WadaagLMS.com,"Student"
-Louis Abbott, louisabbott@WadaagLMS.com,"Student"
-
-Password: 12345678
-
-teacher@example.com / teacher123
-student@example.com / student123
+jamac@gmail.com / 12345678
+student@wadaag.com / 12345678
